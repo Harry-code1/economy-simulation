@@ -1,24 +1,29 @@
 import json
 
 
-money = 150
-population = 10
-power = 50
-factories = 1
+state = {
+    "money": 150,
+    "population": 10,
+    "power": 50,
+    "factories": 1,
+    "power_plants": 0
+}
+
 power_plants = 0
 print("Starting simulation")
 print("--------------------")
 
-def show_stats(tick, money, population, power, factories, power_plants):
+def show_stats(tick, state):
     print("\n==============================")
     print(f"📊 TICK {tick} STATUS")
     print("==============================")
-    print(f"Money:        £{money}")
-    print(f"Population:   {population}")
-    print(f"Power:        {power}")
-    print(f"Factories:   {factories}")
-    print(f"Power plants:{power_plants}")
+    print(f"Money:        £{state['money']}")
+    print(f"Population:   {state['population']}")
+    print(f"Power:        {state['power']}")
+    print(f"Factories:   {state['factories']}")
+    print(f"Power plants:{state['power_plants']}")
     print("==============================")
+
 
 def show_help():
     print("\n========== HELP ==========")
@@ -42,43 +47,65 @@ def show_help():
     print("- If power reaches 0, population will drop")
     print("==========================")
 
-def save_game(money, population, power, factories, power_plants):
-    data = {
-        "money": money,
-        "population": population,
-        "power": power,
-        "factories": factories,
-        "power_plants": power_plants
-    }
-
+def save_game(state):
     with open("save.json", "w") as file:
-        json.dump(data, file)
-
+        json.dump(state, file)
     print("💾 Game saved.")
+
 
 def load_game():
     try:
         with open("save.json", "r") as file:
-            data = json.load(file)
-
+            state = json.load(file)
         print("📂 Game loaded.")
-        return (
-            data["money"],
-            data["population"],
-            data["power"],
-            data["factories"],
-            data["power_plants"]
-        )
+        return state
     except FileNotFoundError:
         print("No save file found.")
         return None
 
+def run_tick(state):
+    state["money"] += state["factories"] * 20
+    state["power"] += state["power_plants"] * 30
+    state["power"] -= state["factories"] * 5
+
+    state["population"] += 1
+    state["power"] -= state["population"]
+
+    if state["power"] < 0:
+        print("⚠ Power shortage! Population unhappy.")
+        state["population"] -= 2
+        state["power"] = 0
+
+def handle_choice(choice, state):
+    if choice == "2" and state["money"] >= 100:
+        state["money"] -= 100
+        state["factories"] += 1
+        print("🏭 Built a factory.")
+
+    elif choice == "3" and state["money"] >= 80:
+        state["money"] -= 80
+        state["power"] += 30
+        state["power_plants"] += 1
+        print("⚡ Built a power plant.")
+
+    elif choice == "4":
+        show_help()
+
+    elif choice == "5":
+        save_game(state)
+
+    elif choice == "6":
+        loaded = load_game()
+        if loaded:
+            state.clear()
+            state.update(loaded)
 
 
 
 
-for tick in range(1, 11):
-    show_stats(tick, money, population, power, factories, power_plants)
+for tick in range(1, 21):
+    show_stats(tick, state)
+
     print("\nChoose an action:")
     print("1. Do nothing")
     print("2. Build factory (£100)")
@@ -88,49 +115,8 @@ for tick in range(1, 11):
     print("6. Load game")
 
     choice = input("Your choice: ")
+    handle_choice(choice, state)
 
-    if choice == "2":
-        if money >= 100:
-            money -= 100
-            factories += 1
-            print("🏭 Built a factory.")
-        else:
-            print("Not enough money.")
-    elif choice == "3":
-        if money >= 80:
-            money -= 80
-            power += 30
-            power_plants += 1
-            print("⚡ Built a power plant.")
-    elif choice == "4":
-        show_help()
-    elif choice == "5":
-        save_game(money, population, power, factories, power_plants)
-
-    elif choice == "6":
-        loaded = load_game()
-        if loaded:
-            money, population, power, factories, power_plants = loaded
-
-    print(f"\nTick {tick}")
-
-    # Production
-    money += factories * 20
-    power -= factories * 5
-
-    # Population growth
-    population += 1
-
-    # Power usage by population
-    power -= population * 1
-
-    # Check for power shortage
-    if power < 10:
-        print("⚠ WARNING: Power critically low!")
-
-    elif power < 0:
-        print("⚠ Power shortage! Population unhappy.")
-        population -= 2
-        power = 0
+    run_tick(state)
 
 
