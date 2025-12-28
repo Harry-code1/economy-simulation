@@ -1,3 +1,6 @@
+import json
+
+
 money = 150
 population = 10
 power = 50
@@ -39,6 +42,36 @@ def show_help():
     print("- If power reaches 0, population will drop")
     print("==========================")
 
+def save_game(money, population, power, factories, power_plants):
+    data = {
+        "money": money,
+        "population": population,
+        "power": power,
+        "factories": factories,
+        "power_plants": power_plants
+    }
+
+    with open("save.json", "w") as file:
+        json.dump(data, file)
+
+    print("💾 Game saved.")
+
+def load_game():
+    try:
+        with open("save.json", "r") as file:
+            data = json.load(file)
+
+        print("📂 Game loaded.")
+        return (
+            data["money"],
+            data["population"],
+            data["power"],
+            data["factories"],
+            data["power_plants"]
+        )
+    except FileNotFoundError:
+        print("No save file found.")
+        return None
 
 
 
@@ -51,6 +84,8 @@ for tick in range(1, 11):
     print("2. Build factory (£100)")
     print("3. Build power plant (£80)")
     print("4. Help / Rules")
+    print("5. Save game")
+    print("6. Load game")
 
     choice = input("Your choice: ")
 
@@ -69,6 +104,13 @@ for tick in range(1, 11):
             print("⚡ Built a power plant.")
     elif choice == "4":
         show_help()
+    elif choice == "5":
+        save_game(money, population, power, factories, power_plants)
+
+    elif choice == "6":
+        loaded = load_game()
+        if loaded:
+            money, population, power, factories, power_plants = loaded
 
     print(f"\nTick {tick}")
 
