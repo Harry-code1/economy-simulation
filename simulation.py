@@ -1,28 +1,82 @@
 import json
 
+class Game:
+    def __init__(self):
+        self.money = 150
+        self.population = 10
+        self.power = 50
+        self.factories = 1
+        self.power_plants = 0
 
-state = {
-    "money": 150,
-    "population": 10,
-    "power": 50,
-    "factories": 1,
-    "power_plants": 0
-}
+    def show_stats(self, tick):
+        print("\n==============================")
+        print(f"📊 TICK {tick} STATUS")
+        print("==============================")
+        print(f"Money:        £{self.money}")
+        print(f"Population:   {self.population}")
+        print(f"Power:        {self.power}")
+        print(f"Factories:   {self.factories}")
+        print(f"Power plants:{self.power_plants}")
+        print("==============================")
+
+    def run_tick(self):
+        self.money += self.factories * 20
+        self.power += self.power_plants * 30
+        self.power -= self.factories * 5
+
+        self.population += 1
+        self.power -= self.population
+
+        if self.power < 0:
+            print("⚠ Power shortage! Population unhappy.")
+            self.population -= 2
+            self.power = 0
+
+    def save(self):
+        with open("save.json", "w") as file:
+            json.dump(self.__dict__, file)
+        print("💾 Game saved.")
+
+    def load(self):
+        try:
+            with open("save.json", "r") as file:
+                data = json.load(file)
+            self.__dict__.update(data)
+            print("📂 Game loaded.")
+        except FileNotFoundError:
+            print("No save file found.")
+
+    def handle_choice(self, choice):
+        if choice == "2" and self.money >= 100:
+            self.money -= 100
+            self.factories += 1
+            print("🏭 Built a factory.")
+
+        elif choice == "3" and self.money >= 80:
+            self.money -= 80
+            self.power += 30
+            self.power_plants += 1
+            print("⚡ Built a power plant.")
+
+        elif choice == "4":
+            show_help()
+
+        elif choice == "5":
+            self.save()
+
+        elif choice == "6":
+            self.load()
+
+
+
+
+
+
 
 power_plants = 0
 print("Starting simulation")
 print("--------------------")
 
-def show_stats(tick, state):
-    print("\n==============================")
-    print(f"📊 TICK {tick} STATUS")
-    print("==============================")
-    print(f"Money:        £{state['money']}")
-    print(f"Population:   {state['population']}")
-    print(f"Power:        {state['power']}")
-    print(f"Factories:   {state['factories']}")
-    print(f"Power plants:{state['power_plants']}")
-    print("==============================")
 
 
 def show_help():
@@ -47,64 +101,12 @@ def show_help():
     print("- If power reaches 0, population will drop")
     print("==========================")
 
-def save_game(state):
-    with open("save.json", "w") as file:
-        json.dump(state, file)
-    print("💾 Game saved.")
 
 
-def load_game():
-    try:
-        with open("save.json", "r") as file:
-            state = json.load(file)
-        print("📂 Game loaded.")
-        return state
-    except FileNotFoundError:
-        print("No save file found.")
-        return None
-
-def run_tick(state):
-    state["money"] += state["factories"] * 20
-    state["power"] += state["power_plants"] * 30
-    state["power"] -= state["factories"] * 5
-
-    state["population"] += 1
-    state["power"] -= state["population"]
-
-    if state["power"] < 0:
-        print("⚠ Power shortage! Population unhappy.")
-        state["population"] -= 2
-        state["power"] = 0
-
-def handle_choice(choice, state):
-    if choice == "2" and state["money"] >= 100:
-        state["money"] -= 100
-        state["factories"] += 1
-        print("🏭 Built a factory.")
-
-    elif choice == "3" and state["money"] >= 80:
-        state["money"] -= 80
-        state["power"] += 30
-        state["power_plants"] += 1
-        print("⚡ Built a power plant.")
-
-    elif choice == "4":
-        show_help()
-
-    elif choice == "5":
-        save_game(state)
-
-    elif choice == "6":
-        loaded = load_game()
-        if loaded:
-            state.clear()
-            state.update(loaded)
-
-
-
+game = Game()
 
 for tick in range(1, 21):
-    show_stats(tick, state)
+    game.show_stats(tick)
 
     print("\nChoose an action:")
     print("1. Do nothing")
@@ -115,8 +117,9 @@ for tick in range(1, 21):
     print("6. Load game")
 
     choice = input("Your choice: ")
-    handle_choice(choice, state)
+    game.handle_choice(choice)
 
-    run_tick(state)
+    game.run_tick()
+
 
 
